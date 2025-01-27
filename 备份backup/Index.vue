@@ -1,19 +1,19 @@
 <template>
   <div>
-    <el-card shadow="never"> 
+    <el-card shadow="never">
       <el-skeleton :loading="loading" animated>
         <el-row :gutter="16" justify="space-between">
           <el-col :xl="12" :lg="12" :md="12" :sm="24" :xs="24">
             <div class="flex items-center">
-              <el-avatar :src="avatar" :size="0" class="mr-16px">
+              <el-avatar :src="avatar" :size="70" class="mr-16px">
                 <img src="@/assets/imgs/avatar.gif" alt="" />
               </el-avatar>
               <div>
                 <div class="text-20px">
                   {{ t('workplace.welcome') }} {{ username }} {{ t('workplace.happyDay') }}
                 </div>
-                <div class="mt-10px text-14px text-gray-500"> 
-                  {{ t('workplace.toady') }}，-100℃~-50℃！
+                <div class="mt-10px text-14px text-gray-500">
+                  {{ t('workplace.toady') }}，20℃ - 32℃！
                 </div>
               </div>
             </div>
@@ -129,14 +129,14 @@
         </template>
         <el-skeleton :loading="loading" animated>
           <el-row>
-            <!-- <el-col v-for="item in shortcut" :key="`team-${item.name}`" :span="8" class="mb-8px">
+            <el-col v-for="item in shortcut" :key="`team-${item.name}`" :span="8" class="mb-8px">
               <div class="flex items-center">
                 <Icon :icon="item.icon" class="mr-8px" />
                 <el-link type="default" :underline="false" @click="setWatermark(item.name)">
                   {{ item.name }}
                 </el-link>
               </div>
-            </el-col> -->
+            </el-col>
           </el-row>
         </el-skeleton>
       </el-card>
@@ -144,11 +144,11 @@
         <template #header>
           <div class="h-3 flex justify-between">
             <span>{{ t('workplace.notice') }}</span>
-            <!-- <el-link type="primary" :underline="false">{{ t('action.more') }}</el-link> -->
+            <el-link type="primary" :underline="false">{{ t('action.more') }}</el-link>
           </div>
         </template>
         <el-skeleton :loading="loading" animated>
-          <!-- <div v-for="(item, index) in notice" :key="`dynamics-${index}`">
+          <div v-for="(item, index) in notice" :key="`dynamics-${index}`">
             <div class="flex items-center">
               <el-avatar :src="avatar" :size="35" class="mr-16px">
                 <img src="@/assets/imgs/avatar.gif" alt="" />
@@ -165,7 +165,7 @@
               </div>
             </div>
             <el-divider />
-          </div> -->
+          </div>
         </el-skeleton>
       </el-card>
     </el-col>
@@ -177,15 +177,15 @@ import { EChartsOption } from 'echarts'
 import { formatTime } from '@/utils'
 
 import { useUserStore } from '@/store/modules/user'
-// import { useWatermark } from '@/hooks/web/useWatermark'
-import type { WorkplaceTotal, Project,  } from './types'
+import { useWatermark } from '@/hooks/web/useWatermark'
+import type { WorkplaceTotal, Project, Notice, Shortcut } from './types'
 import { pieOptions, barOptions } from './echarts-data'
 
 defineOptions({ name: 'Home' })
 
 const { t } = useI18n()
 const userStore = useUserStore()
-// const { setWatermark } = useWatermark()
+const { setWatermark } = useWatermark()
 const loading = ref(true)
 const avatar = userStore.getUser.avatar
 const username = userStore.getUser.nickname
@@ -199,9 +199,9 @@ let totalSate = reactive<WorkplaceTotal>({
 
 const getCount = async () => {
   const data = {
-    project: 666,
-    access: 6,
-    todo: 2333
+    project: 40,
+    access: 2340,
+    todo: 10
   }
   totalSate = Object.assign(totalSate, data)
 }
@@ -211,121 +211,121 @@ let projects = reactive<Project[]>([])
 const getProject = async () => {
   const data = [
     {
-      name: '历年标本数量统计',
-      // icon: '',
-      //message: 'https://lib.glut.edu.cn/',
-      //personal: 'Spring Boot 单体架构',
-      //time: new Date()
+      name: 'ruoyi-vue-pro',
+      icon: 'akar-icons:github-fill',
+      message: 'https://github.com/YunaiV/ruoyi-vue-pro',
+      personal: 'Spring Boot 单体架构',
+      time: new Date()
     },
     {
-      name: '本年标本出库情况',
-      // icon: 'logos:vue',
-      //message: 'https://libopac.glut.edu.cn/opac/reader/space',
-      //personal: 'Vue3 + element-plus',
-      //time: new Date()
+      name: 'yudao-ui-admin-vue3',
+      icon: 'logos:vue',
+      message: 'https://github.com/yudaocode/yudao-ui-admin-vue3',
+      personal: 'Vue3 + element-plus',
+      time: new Date()
     },
     {
-      name: '本年标本入库情况',
-      // icon: 'logos:vue',
-      // message: 'https://github.com/yudaocode/yudao-ui-admin-vben',
-      // personal: 'Vue3 + vben(antd)',
-      // time: new Date()
+      name: 'yudao-ui-admin-vben',
+      icon: 'logos:vue',
+      message: 'https://github.com/yudaocode/yudao-ui-admin-vben',
+      personal: 'Vue3 + vben(antd)',
+      time: new Date()
     },
     {
-      name: '本年标本回库情况',
-      // icon: 'akar-icons:github',
-      // message: 'https://github.com/YunaiV/yudao-cloud',
-      // personal: 'Spring Cloud 微服务架构',
-      // time: new Date()
+      name: 'yudao-cloud',
+      icon: 'akar-icons:github',
+      message: 'https://github.com/YunaiV/yudao-cloud',
+      personal: 'Spring Cloud 微服务架构',
+      time: new Date()
     },
     {
-      name: '历年标本来源增减统计',
-      // icon: 'logos:vue',
-      // message: 'https://github.com/yudaocode/yudao-ui-admin-uniapp',
-      // personal: 'Vue3 + uniapp',
-      // time: new Date()
+      name: 'yudao-ui-mall-uniapp',
+      icon: 'logos:vue',
+      message: 'https://github.com/yudaocode/yudao-ui-admin-uniapp',
+      personal: 'Vue3 + uniapp',
+      time: new Date()
     },
     {
-      name: '按标本类别统计库存数',
-      // icon: 'logos:vue',
-      // message: 'https://github.com/yudaocode/yudao-ui-admin-vue2',
-      // personal: 'Vue2 + element-ui',
-      // time: new Date()
+      name: 'yudao-ui-admin-vue2',
+      icon: 'logos:vue',
+      message: 'https://github.com/yudaocode/yudao-ui-admin-vue2',
+      personal: 'Vue2 + element-ui',
+      time: new Date()
     }
   ]
   projects = Object.assign(projects, data)
 }
 
 // 获取通知公告
-// let notice = reactive<Notice[]>([])
-// const getNotice = async () => {
-//   const data = [
-//     {
-//       title: '桂林理工大学',
-//       type: '学校',
-//       keys: ['学校', '理工', ],
-//       date: new Date() 
-//     },
-//     {
-//       title: '测绘地理信息学院',
-//       type: '学院',
-//       keys: ['学院', '测绘', ],
-//       date: new Date()
-//     },
-//     {
-//       title: '壹斗米工作室',
-//       type: '组织',
-//       keys: ['组织', '壹'],
-//       date: new Date()
-//     },
-//     {
-//       title: '桂林理工大学地质博物馆',
-//       type: '地点',
-//       keys: ['地点', '地质'],
-//       date: new Date()
-//     }
-//   ]
-//   notice = Object.assign(notice, data)
-// }
+let notice = reactive<Notice[]>([])
+const getNotice = async () => {
+  const data = [
+    {
+      title: '系统支持 JDK 8/17/21，Vue 2/3',
+      type: '通知',
+      keys: ['通知', '8', '17', '21', '2', '3'],
+      date: new Date()
+    },
+    {
+      title: '后端提供 Spring Boot 2.7/3.2 + Cloud 双架构',
+      type: '公告',
+      keys: ['公告', 'Boot', 'Cloud'],
+      date: new Date()
+    },
+    {
+      title: '全部开源，个人与企业可 100% 直接使用，无需授权',
+      type: '通知',
+      keys: ['通知', '无需授权'],
+      date: new Date()
+    },
+    {
+      title: '国内使用最广泛的快速开发平台，超 300+ 人贡献',
+      type: '公告',
+      keys: ['公告', '最广泛'],
+      date: new Date()
+    }
+  ]
+  notice = Object.assign(notice, data)
+}
 
 // 获取快捷入口
-// let shortcut = reactive<Shortcut[]>([])
+let shortcut = reactive<Shortcut[]>([])
 
-// const getShortcut = async () => {
-//   const data = [
-//     {
-//       name: 'Github',
-//       icon: 'akar-icons:github-fill',
-//       url: 'github.io'
-//     },
-//     {
-//       name: 'Vue',
-//       icon: 'logos:vue',
-//       url: 'vuejs.org'
-//     },
-//     {
-//       name: 'Vite',
-//       icon: 'vscode-icons:file-type-vite',
-//       url: 'https://vitejs.dev/'
-//     },
-//     {
-//       name: 'Angular',
-//       icon: 'logos:angular-icon',
-//       url: 'github.io'
-//     },
-//     {
-//       name: 'React',
-//       icon: 'logos:react',
-//       url: 'github.io'
-//     },
-//     {
-//       name: 'Webpack',
-//       icon: 'logos:webpack',
-//       url: 'github.io'
-//     }
-//   ]
-//   // shortcut = Object.assign(shortcut, data)
-// }
+const getShortcut = async () => {
+  const data = [
+    {
+      name: 'Github',
+      icon: 'akar-icons:github-fill',
+      url: 'github.io'
+    },
+    {
+      name: 'Vue',
+      icon: 'logos:vue',
+      url: 'vuejs.org'
+    },
+    {
+      name: 'Vite',
+      icon: 'vscode-icons:file-type-vite',
+      url: 'https://vitejs.dev/'
+    },
+    {
+      name: 'Angular',
+      icon: 'logos:angular-icon',
+      url: 'github.io'
+    },
+    {
+      name: 'React',
+      icon: 'logos:react',
+      url: 'github.io'
+    },
+    {
+      name: 'Webpack',
+      icon: 'logos:webpack',
+      url: 'github.io'
+    }
+  ]
+  shortcut = Object.assign(shortcut, data)
+}
 
 // 用户来源
 const getUserAccessSource = async () => {
@@ -379,8 +379,8 @@ const getAllApi = async () => {
   await Promise.all([
     getCount(),
     getProject(),
-    // getNotice(),
-    // getShortcut(),
+    getNotice(),
+    getShortcut(),
     getUserAccessSource(),
     getWeeklyUserActivity()
   ])

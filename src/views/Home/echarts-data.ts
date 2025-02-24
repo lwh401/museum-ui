@@ -95,14 +95,14 @@ export const pieOptions: EChartsOption = {
     {
       name: t('analysis.userAccessSource'),
       type: 'pie',
-      radius: '55%',
+      radius: '60%',
       center: ['50%', '60%'],
       data: [
-        { value: 335, name: t('analysis.directAccess') },
-        { value: 310, name: t('analysis.mailMarketing') },
-        { value: 234, name: t('analysis.allianceAdvertising') },
-        { value: 135, name: t('analysis.videoAdvertising') },
-        { value: 1548, name: t('analysis.searchEngines') }
+        { value: 10, name: t('analysis.directAccess') },
+        { value: 20, name: t('analysis.mailMarketing') },
+        { value: 30, name: t('analysis.allianceAdvertising') },
+        { value: 40, name: t('analysis.videoAdvertising') },
+        { value: 50, name: t('analysis.searchEngines') }
       ]
     }
   ]
@@ -145,7 +145,7 @@ export const barOptions: EChartsOption = {
   series: [
     {
       name: t('analysis.activeQuantity'),
-      data: [13253, 34235, 26321, 12340, 24643, 1322, 1324],
+      data: [111, 222, 333, 444, 555, 666, 777],
       type: 'bar'
     }
   ]

@@ -1,120 +1,134 @@
 <template>
-  <div>
-    <!-- 搜索栏 -->
-    <el-input
-      v-model="searchQuery"
-      placeholder="输入申请人、标本名称或编号"
-      style="width: 300px; margin-bottom: 20px"
-      @input="handleSearch"
-    />
+  <div class="role-management">
+    <!-- 搜索区域 -->
+    <el-card class="search-area">
+      <el-form :inline="true">
+        <el-form-item label="角色名称">
+          <el-input v-model="searchForm.name" placeholder="请输入角色名称" />
+        </el-form-item>
+        <el-form-item label="角色标识">
+          <el-input v-model="searchForm.identifier" placeholder="请输入角色标识" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="searchForm.status" placeholder="请选择状态">
+            <el-option label="全部" value="" />
+            <el-option label="开启" value="1" />
+            <el-option label="关闭" value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button type="success" @click="handleAdd">新增</el-button>
+          <el-button @click="handleExport">导出</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
 
-    <!-- 出库申请列表 -->
-    <el-table :data="filteredData" border>
-      <el-table-column prop="applicant" label="申请人" />
-      <el-table-column prop="requestTime" label="申请时间" />
-      <el-table-column prop="specimenName" label="标本名称" />
-      <el-table-column prop="specimenNumber" label="标本编号" />
-      <el-table-column prop="purpose" label="用途" />
-      <el-table-column prop="status" label="审核状态" />
-      <el-table-column label="操作">
+    <!-- 数据表格 -->
+    <el-table :data="filteredRoles" border style="width: 100%">
+      <el-table-column prop="id" label="角色编号" width="100" />
+      <el-table-column prop="name" label="角色名称" width="150" />
+      <el-table-column prop="type" label="角色类型" width="120" />
+      <el-table-column prop="identifier" label="角色标识" width="180" />
+      <el-table-column prop="order" label="显示顺序" width="100" />
+      <el-table-column prop="remark" label="备注" />
+      <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-button type="primary" @click="handleReview(row)">审核</el-button>
+          <el-tag :type="row.status ? 'success' : 'danger'">
+            {{ row.status ? '开启' : '关闭' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="createTime" label="创建时间" width="180" />
+      <el-table-column label="操作" width="220">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+          <el-button link type="primary" @click="handleMenuAuth(row)">菜单权限</el-button>
+          <el-button link type="primary" @click="handleDataAuth(row)">数据权限</el-button>
+          <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-
-    <!-- 审核弹窗 -->
-    <el-dialog v-model="showDialog" title="审核出库申请">
-      <p>申请人: {{ selectedRecord?.applicant }}</p>
-      <p>标本名称: {{ selectedRecord?.specimenName }}</p>
-      <p>标本编号: {{ selectedRecord?.specimenNumber }}</p>
-      <p>用途: {{ selectedRecord?.purpose }}</p>
-      <el-input
-        v-if="isRejecting"
-        v-model="rejectReason"
-        placeholder="请输入驳回原因"
-        style="margin-top: 20px"
-      />
-      <template #footer>
-        <el-button @click="showDialog = false">取消</el-button>
-        <el-button type="danger" @click="handleReject">驳回</el-button>
-        <el-button type="primary" @click="handleApprove">通过</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
 
 // 模拟数据
-const data = ref([
+const roles = ref([
   {
-    id: 1,
-    applicant: '用户A',
-    requestTime: '2025-01-01',
-    specimenName: '标本1',
-    specimenNumber: '001',
-    purpose: '实验',
-    status: '待审核',
+    id: 101,
+    name: '测试账号',
+    type: '自定义',
+    identifier: '测试',
+    order: 0,
+    remark: '',
+    status: 1,
+    createTime: '2021-01-06 13:49:35'
   },
-  {
-    id: 2,
-    applicant: '用户B',
-    requestTime: '2025-01-01',
-    specimenName: '标本2',
-    specimenNumber: '002',
-    purpose: '研究',
-    status: '待审核',
-  },
-]);
+  // 其他数据...
+])
 
-// 搜索关键字
-const searchQuery = ref('');
+// 搜索表单
+const searchForm = ref({
+  name: '',
+  identifier: '',
+  status: ''
+})
 
 // 过滤后的数据
-const filteredData = computed(() => {
-  return data.value.filter(
-    (item) =>
-      item.applicant.includes(searchQuery.value) ||
-      item.specimenName.includes(searchQuery.value) ||
-      item.specimenNumber.includes(searchQuery.value)
-  );
-});
+const filteredRoles = computed(() => {
+  return roles.value.filter(role => {
+    return (
+      role.name.includes(searchForm.value.name) &&
+      role.identifier.includes(searchForm.value.identifier) &&
+      (searchForm.value.status === '' ||
+        role.status.toString() === searchForm.value.status)
+    )
+  })
+})
 
-// 审核弹窗相关状态
-const showDialog = ref(false);
-const selectedRecord = ref(null);
-const rejectReason = ref('');
-const isRejecting = ref(false);
+// 操作方法
+const handleSearch = () => {
+  // 搜索逻辑
+}
 
-// 打开审核弹窗
-const handleReview = (row) => {
-  selectedRecord.value = row;
-  showDialog.value = true;
-  isRejecting.value = false; // 重置驳回状态
-  rejectReason.value = ''; // 清空驳回原因
-};
+const handleAdd = () => {
+  // 新增逻辑
+}
 
-// 通过审核
-const handleApprove = () => {
-  selectedRecord.value.status = '已通过';
-  showDialog.value = false;
-  console.log('通过申请:', selectedRecord.value);
-};
+const handleExport = () => {
+  // 导出逻辑
+}
 
-// 驳回审核
-const handleReject = () => {
-  if (!isRejecting.value) {
-    isRejecting.value = true; // 显示驳回原因输入框
-    return;
-  }
-  if (!rejectReason.value) {
-    alert('请输入驳回原因');
-    return;
-  }
-  selectedRecord.value.status = '已驳回';
-  console.log('驳回原因:', rejectReason.value);
-  showDialog.value = false;
-};
+const handleEdit = (row) => {
+  // 编辑逻辑
+}
+
+const handleMenuAuth = (row) => {
+  // 菜单权限设置
+}
+
+const handleDataAuth = (row) => {
+  // 数据权限设置
+}
+
+const handleDelete = (row) => {
+  // 删除逻辑
+}
 </script>
+
+<style scoped>
+.search-area {
+  margin-bottom: 20px;
+}
+
+.el-form-item {
+  margin-bottom: 0;
+}
+
+.el-table {
+  margin-top: 20px;
+}
+</style>

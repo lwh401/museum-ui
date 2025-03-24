@@ -1,354 +1,315 @@
 <template>
-  <div class="in-request-page">
-    <h1>标本入库申请</h1>
-
-    <!-- 搜索栏 -->
-    <div class="search-bar">
-      <input v-model="searchForm.name" placeholder="名称" />
-      <input v-model="searchForm.number" placeholder="编号" />
-      <button @click="search">搜索</button>
-      <button @click="resetSearch">重置</button>
-      <button @click="exportData">导出</button>
-    </div>
-
-    <!-- 数据表格 -->
-    <table class="data-table">
-      <thead>
-      <tr>
-        <th>编号</th>
-        <th>名称</th>
-        <th>存放位置</th>
-        <th>图片</th>
-        <th>退还人</th>
-        <th>退还时间</th>
-        <th>点收人</th>
-        <th>回库状态</th>
-        <th>操作</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="item in filteredData" :key="item.id">
-        <td>{{ item.number }}</td>
-        <td>{{ item.name }}</td>
-        <td>{{ item.location }}</td>
-        <td>
-          <img :src="item.image" alt="标本图片" class="specimen-image" />
-        </td>
-        <td>{{ item.returner }}</td>
-        <td>{{ item.returnTime }}</td>
-        <td>{{ item.receiver }}</td>
-        <td>
-          <span :class="`status ${item.status}`">{{ item.status }}</span>
-        </td>
-        <td>
-          <button @click="confirmReturn(item.id)">确认回库</button>
-          <button @click="editItem(item)">编辑</button>
-          <button @click="deleteItem(item.id)">删除</button>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-
-    <!-- 入库申请弹窗 -->
-    <div v-if="showModal" class="modal">
-      <div class="modal-content">
-        <h2>入库申请表单</h2>
-        <div>
-          <label>申请人：</label>
-          <input v-model="requestForm.applicant" placeholder="申请人" />
-        </div>
-        <div>
-          <label>申请时间：</label>
-          <input v-model="requestForm.applyTime" type="date" />
-        </div>
-        <div>
-          <label>标本名称：</label>
-          <input v-model="requestForm.specimenName" placeholder="标本名称" />
-        </div>
-        <div>
-          <label>标本编号：</label>
-          <input v-model="requestForm.specimenNumber" placeholder="标本编号" />
-        </div>
-        <div>
-          <label>用途：</label>
-          <input v-model="requestForm.purpose" placeholder="用途" />
-        </div>
-        <div>
-          <label>附件：</label>
-          <input type="file" @change="handleFileUpload" />
-        </div>
-        <div>
-          <button @click="submitRequest">提交</button>
-          <button @click="closeModal">取消</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 提交申请按钮 -->
-    <button class="submit-button" @click="openRequestModal">提交入库申请</button>
-  </div>
+  <ContentWrap>
+  <!-- 搜索栏 -->
+<el-form
+  class="-mb-15px"
+  :model="queryParams"
+  ref="queryFormRef"
+  :inline="true"
+  label-width="68px"
+>
+  <el-form-item label="名称" prop="name">
+    <el-input
+      v-model="queryParams.name"
+      placeholder="请输入名称"
+      clearable
+      @keyup.enter="handleQuery"
+      class="!w-240px"
+    />
+  </el-form-item>
+  <el-form-item label="编号" prop="number">
+    <el-input
+      v-model="queryParams.number"
+      placeholder="请输入手机号码"
+      clearable
+      @keyup.enter="handleQuery"
+      class="!w-240px"
+    />
+  </el-form-item>
+  <el-form-item>
+    <el-button @click="handleQuery"><Icon icon="ep:search" />搜索</el-button>
+    <el-button @click="resetQuery"><Icon icon="ep:refresh" />重置</el-button>
+                <el-button
+                  type="primary"
+                  plain
+                  @click="openForm('create')"
+                >
+                  <Icon icon="ep:plus" /> 新增
+                </el-button>
+                <el-button
+                  type="warning"
+                  plain
+                  @click="handleImport"
+                >
+                  <Icon icon="ep:upload" /> 导入
+                </el-button>
+                <el-button
+                  type="success"
+                  plain
+                  @click="handleExport"
+                  :loading="exportLoading"
+                >
+                  <Icon icon="ep:download" />导出
+                </el-button>
+  </el-form-item>
+</el-form>
+</contentwrap>
+<!-- 数据表格 -->
+<ContentWrap>
+<el-table v-loading="loading" :data="list">
+  <el-table-column label="编号" align="center" prop="number" />
+  <el-table-column
+    label="名称"
+    align="center"
+    prop="name"
+    :show-overflow-tooltip="true"
+  />
+  <el-table-column
+    label="存放位置"
+    align="center"
+    prop="location"
+    :show-overflow-tooltip="true"
+  />
+  <el-table-column
+    label="图片"
+    align="center"
+    prop="image"
+    :show-overflow-tooltip="true"
+  />
+  <el-table-column label="退还人" align="center" prop="returner" width="120" />
+  <el-table-column
+    :formatter="dateFormatter"
+    label="退还时间"
+    prop="returnTime"
+  />
+  <el-table-column
+    label="点收人"
+    align="center"
+    prop="receiver"
+    width="180"
+  />
+  <el-table-column
+    label="回库状态"
+    align="center"
+    prop="status"
+    :show-overflow-tooltip="true"
+  />
+  <!--          <el-table-column label="操作" align="center" width="160">-->
+  <!--            <template #default="scope">-->
+  <!--              <div class="flex items-center justify-center">-->
+  <!--                <el-button-->
+  <!--                  type="primary"-->
+  <!--                  link-->
+  <!--                  @click="openForm('update', scope.row.id)"-->
+  <!--                  v-hasPermi="['system:user:update']"-->
+  <!--                >-->
+  <!--                  <Icon icon="ep:edit" />修改-->
+  <!--                </el-button>-->
+  <!--                <el-dropdown-->
+  <!--                  @command="(command) => handleCommand(command, scope.row)"-->
+  <!--                  v-hasPermi="[-->
+  <!--                    'system:user:delete',-->
+  <!--                    'system:user:update-password',-->
+  <!--                    'system:permission:assign-user-role'-->
+  <!--                  ]"-->
+  <!--                >-->
+  <!--                  <el-button type="primary" link><Icon icon="ep:d-arrow-right" /> 更多</el-button>-->
+  <!--                  <template #dropdown>-->
+  <!--                    <el-dropdown-menu>-->
+  <!--                      <el-dropdown-item-->
+  <!--                        command="handleDelete"-->
+  <!--                        v-if="checkPermi(['system:user:delete'])"-->
+  <!--                      >-->
+  <!--                        <Icon icon="ep:delete" />删除-->
+  <!--                      </el-dropdown-item>-->
+  <!--                      <el-dropdown-item-->
+  <!--                        command="handleResetPwd"-->
+  <!--                        v-if="checkPermi(['system:user:update-password'])"-->
+  <!--                      >-->
+  <!--                        <Icon icon="ep:key" />重置密码-->
+  <!--                      </el-dropdown-item>-->
+  <!--                      <el-dropdown-item-->
+  <!--                        command="handleRole"-->
+  <!--                        v-if="checkPermi(['system:permission:assign-user-role'])"-->
+  <!--                      >-->
+  <!--                        <Icon icon="ep:circle-check" />分配角色-->
+  <!--                      </el-dropdown-item>-->
+  <!--                    </el-dropdown-menu>-->
+  <!--                  </template>-->
+  <!--                </el-dropdown>-->
+  <!--              </div>-->
+  <!--            </template>-->
+  <!--          </el-table-column>-->
+          </el-table>
+  <!--        <Pagination-->
+  <!--          :total="total"-->
+  <!--          v-model:page="queryParams.pageNo"-->
+  <!--          v-model:limit="queryParams.pageSize"-->
+  <!--          @pagination="getList"-->
+  <!--        />-->
+</ContentWrap>
+<!--  &lt;!&ndash; 添加或修改用户对话框 &ndash;&gt;-->
+<!--  <UserForm ref="formRef" @success="getList" />-->
+<!--  &lt;!&ndash; 用户导入对话框 &ndash;&gt;-->
+<!--  <UserImportForm ref="importFormRef" @success="getList" />-->
+<!--  &lt;!&ndash; 分配角色 &ndash;&gt;-->
+<!--  <UserAssignRoleForm ref="assignRoleFormRef" @success="getList" />-->
 </template>
+<script lang="ts" setup>
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
+import { checkPermi } from '@/utils/permission'
+import { dateFormatter } from '@/utils/formatTime'
+import download from '@/utils/download'
+import { CommonStatusEnum } from '@/utils/constants'
+// import * as UserApi from '@/api/system/user'
 
-<script>
-import { ref, computed } from 'vue';
+defineOptions({ name: 'SystemUser' })
 
-export default {
-  name: 'InRequest',
-  setup() {
-    // 搜索表单
-    const searchForm = ref({
-      name: '',
-      number: '',
-    });
+const message = useMessage() // 消息弹窗
+const { t } = useI18n() // 国际化
 
-    // 入库申请表单
-    const showModal = ref(false);
-    const requestForm = ref({
-      applicant: '',
-      applyTime: '',
-      specimenName: '',
-      specimenNumber: '',
-      purpose: '',
-      attachment: null,
-    });
+const loading = ref(true) // 列表的加载中
+const total = ref(0) // 列表的总页数
+const list = ref() // 列表的数
+const queryParams = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  number: undefined,
+  name: undefined,
+  // status: undefined,
+  // deptId: undefined,
+  // createTime: []
+})
+const queryFormRef = ref() // 搜索的表单
 
-    // 数据列表
-    const data = ref([
-      {
-        id: 1,
-        number: 'RT-001 系列',
-        name: '矿石标本',
-        location: 'B区-3柜',
-        image: 'https://via.placeholder.com/50', // 替换为实际图片链接
-        returner: '张三',
-        returnTime: '2024-03-01 14:30:00',
-        receiver: '李四',
-        status: '已入库',
-      },
-      {
-        id: 2,
-        number: 'RT-002 系列',
-        name: '矿石标本',
-        location: 'B区-4柜',
-        image: 'https://via.placeholder.com/50', // 替换为实际图片链接
-        returner: '王五',
-        returnTime: '2024-03-02 15:45:00',
-        receiver: '赵六',
-        status: '待审核',
-      },
-    ]);
+/** 查询列表 */
+const getList = async () => {
+  loading.value = true
+  try {
+    const data = []
+    list.value = data.list
+    // total.value = data.total
+  } finally {
+    loading.value = false
+  }
+}
 
-    // 过滤数据
-    const filteredData = computed(() => {
-      return data.value.filter((item) =>
-        `${item.name}${item.number}`.includes(`${searchForm.value.name}${searchForm.value.number}`)
-      );
-    });
+/** 搜索按钮操作 */
+const handleQuery = () => {
+  queryParams.pageNo = 1
+  getList()
+}
 
-    // 搜索
-    const search = () => {
-      console.log('搜索中...');
-    };
+/** 重置按钮操作 */
+const resetQuery = () => {
+  queryFormRef.value?.resetFields()
+  handleQuery()
+}
 
-    // 重置搜索
-    const resetSearch = () => {
-      searchForm.value = { name: '', number: '' };
-    };
+/** 处理部门被点击 */
+const handleDeptNodeClick = async (row) => {
+  queryParams.deptId = row.id
+  await getList()
+}
 
-    // 导出数据
-    const exportData = () => {
-      console.log('导出数据...');
-    };
+/** 添加/修改操作 */
+const formRef = ref()
+const openForm = (type: string, id?: number) => {
+  formRef.value.open(type, id)
+}
 
-    // 打开入库申请弹窗
-    const openRequestModal = () => {
-      showModal.value = true;
-    };
+/** 用户导入 */
+const importFormRef = ref()
+const handleImport = () => {
+  importFormRef.value.open()
+}
 
-    // 关闭弹窗
-    const closeModal = () => {
-      showModal.value = false;
-      requestForm.value = {
-        applicant: '',
-        applyTime: '',
-        specimenName: '',
-        specimenNumber: '',
-        purpose: '',
-        attachment: null,
-      };
-    };
+/** 修改用户状态 */
+const handleStatusChange = async (row: UserApi.UserVO) => {
+  try {
+    // 修改状态的二次确认
+    const text = row.status === CommonStatusEnum.ENABLE ? '启用' : '停用'
+    await message.confirm('确认要"' + text + '""' + row.username + '"用户吗?')
+    // 发起修改状态
+    await UserApi.updateUserStatus(row.id, row.status)
+    // 刷新列表
+    await getList()
+  } catch {
+    // 取消后，进行恢复按钮
+    row.status =
+      row.status === CommonStatusEnum.ENABLE ? CommonStatusEnum.DISABLE : CommonStatusEnum.ENABLE
+  }
+}
 
-    // 提交入库申请
-    const submitRequest = () => {
-      const newRequest = {
-        id: data.value.length + 1,
-        ...requestForm.value,
-        status: '待审核',
-      };
-      data.value.push(newRequest);
-      closeModal();
-    };
+/** 导出按钮操作 */
+const exportLoading = ref(false)
+const handleExport = async () => {
+  try {
+    // 导出的二次确认
+    await message.exportConfirm()
+    // 发起导出
+    exportLoading.value = true
+    const data = await UserApi.exportUser(queryParams)
+    download.excel(data, '用户数据.xls')
+  } catch {
+  } finally {
+    exportLoading.value = false
+  }
+}
 
-    // 确认回库
-    const confirmReturn = (id) => {
-      const index = data.value.findIndex((item) => item.id === id);
-      if (index !== -1) {
-        data.value[index].status = '已入库';
-      }
-    };
+/** 操作分发 */
+const handleCommand = (command: string, row: UserApi.UserVO) => {
+  switch (command) {
+    case 'handleDelete':
+      handleDelete(row.id)
+      break
+    case 'handleResetPwd':
+      handleResetPwd(row)
+      break
+    case 'handleRole':
+      handleRole(row)
+      break
+    default:
+      break
+  }
+}
 
-    // 编辑数据
-    const editItem = (item) => {
-      console.log('编辑', item);
-    };
+/** 删除按钮操作 */
+const handleDelete = async (id: number) => {
+  try {
+    // 删除的二次确认
+    await message.delConfirm()
+    // 发起删除
+    await UserApi.deleteUser(id)
+    message.success(t('common.delSuccess'))
+    // 刷新列表
+    await getList()
+  } catch {}
+}
 
-    // 删除数据
-    const deleteItem = (id) => {
-      data.value = data.value.filter((item) => item.id !== id);
-    };
+/** 重置密码 */
+const handleResetPwd = async (row: UserApi.UserVO) => {
+  try {
+    // 重置的二次确认
+    const result = await message.prompt(
+      '请输入"' + row.username + '"的新密码',
+      t('common.reminder')
+    )
+    const password = result.value
+    // 发起重置
+    await UserApi.resetUserPwd(row.id, password)
+    message.success('修改成功，新密码是：' + password)
+  } catch {}
+}
 
-    // 文件上传
-    const handleFileUpload = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        requestForm.value.attachment = URL.createObjectURL(file);
-      }
-    };
+/** 分配角色 */
+const assignRoleFormRef = ref()
+const handleRole = (row: UserApi.UserVO) => {
+  assignRoleFormRef.value.open(row)
+}
 
-    return {
-      searchForm,
-      showModal,
-      requestForm,
-      data,
-      filteredData,
-      search,
-      resetSearch,
-      exportData,
-      openRequestModal,
-      closeModal,
-      submitRequest,
-      confirmReturn,
-      editItem,
-      deleteItem,
-      handleFileUpload,
-    };
-  },
-};
+/** 初始化 */
+// onMounted(() => {
+//   getList()
+// })
 </script>
-
-<style scoped>
-.in-request-page {
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.search-bar {
-  margin-bottom: 20px;
-  display: flex;
-  gap: 10px;
-}
-
-.search-bar input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  flex: 1;
-}
-
-.search-bar button {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-.data-table th,
-.data-table td {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: left;
-}
-
-.data-table th {
-  background-color: #f2f2f2;
-}
-
-.status {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: white;
-}
-
-.status.已入库 {
-  background-color: #4caf50;
-}
-
-.status.待审核 {
-  background-color: #ff9800;
-}
-
-.specimen-image {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 400px;
-}
-
-.modal-content div {
-  margin-bottom: 10px;
-}
-
-.modal-content label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-.modal-content button {
-  margin-right: 10px;
-}
-
-.submit-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 20px;
-}
-</style>

@@ -1,11 +1,11 @@
 <template>
   <Dialog v-model="dialogVisible" :title="dialogTitle">
-    <el-form
+    <el-form-item
       ref="formRef"
       v-loading="formLoading"
       :model="formData"
       :rules="formRules"
-      label-width="80px"
+      label-width="100px"
     >
 <!--      <el-form-item label="出库标本">-->
 <!--        <el-select v-model="formData.number" clearable placeholder="请选择出库标本">-->
@@ -30,21 +30,39 @@
 <!--      </el-form-item>-->
 
 
-      <el-form-item label="申请编号" prop="id">
-        <el-input
-          v-model="formData.id"
-          class="!w-240px"
-          placeholder="请输入申请编号"
-        />
-      </el-form-item>
+<!--      <el-form-item label="申请编号" prop="id">-->
+<!--        <el-input-->
+<!--          v-model="formData.id"-->
+<!--          class="!w-240px"-->
+<!--          placeholder="请输入申请编号"-->
+<!--        />-->
+<!--      </el-form-item>-->
       <el-form-item label="标本编号" prop="number">
         <el-input v-model="formData.number" placeholder="请输入标本编号" />
       </el-form-item>
+      <el-form-item label="申请人" prop="applyPerson">
+        <el-input v-model="formData.applyPerson" placeholder="请输入申请人" />
+      </el-form-item>
+      <el-form-item label="申请单位" prop="applyUnit">
+        <el-input v-model="formData.numbapplyUniter" placeholder="请输入申请单位" />
+      </el-form-item>
+      <el-form-item label="预计退还时间" prop="returnExpect">
+<!--        <el-input v-model="formData.returnExpect" placeholder="请输入时间" />-->
+<!--      </el-form-item>-->
+<!--      <el-form-item-->
+        <el-date-picker
+        v-model="formData.returnExpect"
+        range-separator="-"
+        placeholder="退还时间"
 
+      />
+      </el-form-item>
+      <el-form-item label="目的" prop="purpose">
+        <el-input v-model="formData.purpose" placeholder="请输入目的" />
+      </el-form-item>
 
-
-    </el-form>
-    <template #footer>
+    </el-form-item>
+    <template class="footer">
       <el-button :disabled="formLoading" type="primary" @click="submitForm">确 定</el-button>
       <el-button @click="dialogVisible = false">取 消</el-button>
     </template>
@@ -57,6 +75,7 @@ import { CommonStatusEnum } from '@/utils/constants'
 import * as OutBoundApi from '@/api/system/Out'
 import {DICT_TYPE, getIntDictOptions} from "@/utils/dict";
 import {updateForm} from "@/api/system/Out";
+import {jsonParse} from "@/utils";
 
 
 defineOptions({ name: 'SystemOutForm' })
@@ -76,7 +95,7 @@ const formData = ref({
   // status: CommonStatusEnum.ENABLE,
   // remark: ''
 
-  number:""
+  number:[]
 })
 const formRules = reactive({
  })
@@ -120,6 +139,7 @@ const submitForm = async () => {
   formLoading.value = true
   try {
     const data = formData.value as unknown as OutBoundApi.OouBoundVO
+    data.number =jsonParse(data.number)
     if (formType.value === 'create') {
       console.log(data,'新增时')
       await OutBoundApi.createOutBound(data)

@@ -263,7 +263,8 @@ const openForm = (type: string, id?: number) => {
 //     loading.value = false
 //   }
 // }
-// onMounted(() => {
-//   getList()
-// })
+
+onMounted( ()=>{
+  getList();
+})
 </script>

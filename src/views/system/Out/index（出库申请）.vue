@@ -8,11 +8,11 @@
       class="-mb-15px"
       label-width="100px"
     >
-      <el-form-item label="申请编号" prop="id">
+      <el-form-item label="标本编号" prop="id">
         <el-input
           v-model="queryParams.id"
           class="!w-240px"
-          placeholder="请输入申请编号"
+          placeholder="请输入标本编号"
         />
       </el-form-item>
       <el-form-item label="标本名称" prop="sampleName">
@@ -61,8 +61,18 @@
 <!--  列表-->
   <ContentWrap>
       <el-table v-loading="loading" :data="list">
-        <el-table-column align="center" label="申请编号" prop="id" width="100" />
+<!--        <el-table-column align="center" label="标本编号" prop="id" width="100" />-->
         <el-table-column label="标本编号" align="center" prop="number" width="120" />
+
+        <el-table-column label="申请单位" align="center" prop="applyUnit" width="120" />
+        <el-table-column label="退还时间" align="center" prop="returnExpect" width="120" />
+
+        <el-table-column label="目的" align="center" prop="purpose" width="120" />
+
+
+
+
+
 <!--        <el-table-column label="出库类型" align="center" prop="outType" width="120">-->
 <!--          <template #default="scope">-->
 <!--            <dict-tag :type="DICT_TYPE.SPECIMEN_OUT_TYPE" :value="scope.row.outType" />-->

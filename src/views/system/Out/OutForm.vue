@@ -1,6 +1,6 @@
 <template>
   <Dialog v-model="dialogVisible" :title="dialogTitle">
-    <el-form-item
+    <el-form
       ref="formRef"
       v-loading="formLoading"
       :model="formData"
@@ -37,9 +37,45 @@
 <!--          placeholder="请输入申请编号"-->
 <!--        />-->
 <!--      </el-form-item>-->
+<!--      <el-form-item label="标本编号" prop="number">-->
+<!--        <el-input v-model="formData.number" placeholder="请输入标本编号" />-->
+<!--      </el-form-item>-->
+
       <el-form-item label="标本编号" prop="number">
-        <el-input v-model="formData.number" placeholder="请输入标本编号" />
+        <el-input
+          v-model="formData.number[0]"
+          placeholder="请输入标本编号">
+<!--        />-->
+        <template #append>
+        <el-button
+          type="primary"
+          @click="add()"
+        >
+          +
+        </el-button>
+        <el-button
+          type="primary"
+          @click="remove()"
+        >
+          -
+        </el-button>
+        </template>
+        </el-input>
       </el-form-item>
+
+      <template v-if="formData.number && formData.number.length > 1">
+        <el-form-item
+          v-for="(item,index) in formData.number.slice(1)"
+          :key="index + 1"
+          :label="`标本编号 ${index + 2}`"
+          :prop="`number.${index + 1}`"
+        >
+          <el-input
+            v-model="formData.number[index + 1]"
+            placeholder="请输入标本编号"
+          />
+        </el-form-item>
+      </template>
       <el-form-item label="申请人" prop="applyPerson">
         <el-input v-model="formData.applyPerson" placeholder="请输入申请人" />
       </el-form-item>
@@ -61,8 +97,8 @@
         <el-input v-model="formData.purpose" placeholder="请输入目的" />
       </el-form-item>
 
-    </el-form-item>
-    <template class="footer">
+    </el-form>
+    <template #footer>
       <el-button :disabled="formLoading" type="primary" @click="submitForm">确 定</el-button>
       <el-button @click="dialogVisible = false">取 消</el-button>
     </template>
@@ -74,7 +110,7 @@ import { CommonStatusEnum } from '@/utils/constants'
 
 import * as OutBoundApi from '@/api/system/Out'
 import {DICT_TYPE, getIntDictOptions} from "@/utils/dict";
-import {updateForm} from "@/api/system/Out";
+// import {updateForm} from "@/api/system/Out";
 import {jsonParse} from "@/utils";
 
 
@@ -95,7 +131,7 @@ const formData = ref({
   // status: CommonStatusEnum.ENABLE,
   // remark: ''
 
-  number:[]
+  number:['']
 })
 const formRules = reactive({
  })
@@ -118,15 +154,25 @@ const open = async (type: string, id?: number) => {
   }
 }
 
+const add = () => {
+  formData.value.number.push('')
+}
+const remove = () => {
+  if (formData.value.number.length > 1) {
+    formData.value.number.pop(); // 删除最后一个输入框
+  }
+};
+
 /** 重置表单 */
 const resetForm = () => {
   formData.value = {
     id: undefined,
-    number:""
+    number:['']
   }
   formRef.value?.resetFields()
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
+
 
 /** 提交表单 */
 const emit = defineEmits(['success']) // 定义 success 事件，用于操作成功后的回调
@@ -139,9 +185,16 @@ const submitForm = async () => {
   formLoading.value = true
   try {
     const data = formData.value as unknown as OutBoundApi.OouBoundVO
-    data.number =jsonParse(data.number)
+    // data.number =jsonParse(data.number)
     if (formType.value === 'create') {
       console.log(data,'新增时')
+      // 1. 分割字符串并过滤空值
+      // const rawArray = formData.value.number.split(',').map(item => item.trim()).filter(Boolean);
+      // 2. 转换为数字数组
+      // formData.value.number = rawArray.map(item => {
+      //   const num = Number(item);
+      //   return isNaN(num) ? null : num; // 处理非数字字符（返回 null 或根据需求处理）
+      // }).filter(num => num !== null); // 过滤无效值
       await OutBoundApi.createOutBound(data)
       message.success(t('common.createSuccess'))
     } else {
@@ -151,8 +204,34 @@ const submitForm = async () => {
     dialogVisible.value = false
     // 发送操作成功的事件
     emit('success')
-  } finally {
+  }
+  catch (error) {
+    console.error('Error:', error);
+  }
+  finally {
     formLoading.value = false
   }
 }
   </script>
+<!--<style scoped>-->
+<!--.dialog-container {-->
+<!--  display: flex;-->
+<!--  flex-direction: column;-->
+<!--  gap: 16px; /* 控制行间距 */-->
+<!--}-->
+
+<!--.form-item {-->
+<!--  display: flex;-->
+<!--  align-items: center; /* 垂直居中对齐 */-->
+<!--  gap: 8px; /* 标签和输入框间距 */-->
+<!--}-->
+
+<!--.label {-->
+<!--  width: 100px; /* 固定标签宽度 */-->
+<!--  flex-shrink: 0;-->
+<!--}-->
+
+<!--.input {-->
+<!--  flex: 1; /* 输入框自适应剩余空间 */-->
+<!--}-->
+<!--</style>-->

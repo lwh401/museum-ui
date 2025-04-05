@@ -32,10 +32,10 @@ export const getPage = (params) => {
   return request.get({ url: '/museum/flow/page', params })
 }
 
-// // 查询角色列表
-// export const getRolePage = async (params: PageParam) => {
-//   return await request.get({ url: '/system/Out/page', params })
-// }
+// 查询角色列表
+export const getRolePage = async (params: PageParam) => {
+  return await request.get({ url: '/system/Out/page', params })
+}
 //
 // // 查询角色（精简)列表
 // export const getSimpleRoleList = async (): Promise<RoleVO[]> => {

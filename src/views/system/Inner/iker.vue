@@ -6,25 +6,23 @@
   :model="queryParams"
   ref="queryFormRef"
   :inline="true"
-  label-width="68px"
+  label-width="100px"
 >
-  <el-form-item label="名称" prop="name">
+  <el-form-item label="标本编号" prop="number">
     <el-input
-      v-model="queryParams.name"
-      placeholder="请输入名称"
+      v-model="queryParams.number"
+      placeholder="请输入编号"
       clearable
       @keyup.enter="handleQuery"
       class="!w-240px"
     />
   </el-form-item>
-  <el-form-item label="编号" prop="number">
-    <el-input
-      v-model="queryParams.number"
-      placeholder="请输入手机号码"
-      clearable
-      @keyup.enter="handleQuery"
-      class="!w-240px"
-    />
+  <el-form-item label="入库时间" prop="returnTime">
+<el-date-picker
+  v-model="queryParams.returnTime"
+  range-separator="-"
+  placeholder="入库时间"
+  />
   </el-form-item>
   <el-form-item>
     <el-button @click="handleQuery"><Icon icon="ep:search" />搜索</el-button>
@@ -36,280 +34,94 @@
                 >
                   <Icon icon="ep:plus" /> 新增
                 </el-button>
-                <el-button
-                  type="warning"
-                  plain
-                  @click="handleImport"
-                >
-                  <Icon icon="ep:upload" /> 导入
-                </el-button>
-                <el-button
-                  type="success"
-                  plain
-                  @click="handleExport"
-                  :loading="exportLoading"
-                >
-                  <Icon icon="ep:download" />导出
-                </el-button>
   </el-form-item>
 </el-form>
 </contentwrap>
 <!-- 数据表格 -->
 <ContentWrap>
 <el-table v-loading="loading" :data="list">
-  <el-table-column label="编号" align="center" prop="number" />
-  <el-table-column
-    label="名称"
-    align="center"
-    prop="name"
-    :show-overflow-tooltip="true"
+  <el-table-column label="申请单号" align="center" prop="id" />
+  <el-table-column label="标本编号" align="center" prop="number" />
+  <el-table-column label="标本名称" align="center" prop="name" />
+  <el-table-column label="入库时间" align="center" prop="returnTime" />
+  <el-table-column label="退换人" align="center" prop="returnPerson" />
+  <el-table-column label="点收人" align="center" prop="receivePerson" />
+  <el-table-column label="备注" align="center" prop="remark" />
+  <el-table-column label="操作" align="center" width="220">
+    <template #default="scope">
+      <el-button
+        link
+        type="primary"
+        @click="openForm('update', scope.row.id)"
+      >
+        编辑
+      </el-button>
+      <el-button
+        v-hasPermi="['system:role:delete']"
+        link
+        type="danger"
+        @click="handleDelete(scope.row.id)"
+      >
+        删除
+      </el-button>
+    </template>
+  </el-table-column>
+</el-table>
+  <!-- 分页 -->
+  <Pagination
+    :page="queryParams.pageNo"
+    :limit="queryParams.pageSize"
+    :total="total"
   />
-  <el-table-column
-    label="存放位置"
-    align="center"
-    prop="location"
-    :show-overflow-tooltip="true"
-  />
-  <el-table-column
-    label="图片"
-    align="center"
-    prop="image"
-    :show-overflow-tooltip="true"
-  />
-  <el-table-column label="退还人" align="center" prop="returner" width="120" />
-  <el-table-column
-    :formatter="dateFormatter"
-    label="退还时间"
-    prop="returnTime"
-  />
-  <el-table-column
-    label="点收人"
-    align="center"
-    prop="receiver"
-    width="180"
-  />
-  <el-table-column
-    label="回库状态"
-    align="center"
-    prop="status"
-    :show-overflow-tooltip="true"
-  />
-  <!--          <el-table-column label="操作" align="center" width="160">-->
-  <!--            <template #default="scope">-->
-  <!--              <div class="flex items-center justify-center">-->
-  <!--                <el-button-->
-  <!--                  type="primary"-->
-  <!--                  link-->
-  <!--                  @click="openForm('update', scope.row.id)"-->
-  <!--                  v-hasPermi="['system:user:update']"-->
-  <!--                >-->
-  <!--                  <Icon icon="ep:edit" />修改-->
-  <!--                </el-button>-->
-  <!--                <el-dropdown-->
-  <!--                  @command="(command) => handleCommand(command, scope.row)"-->
-  <!--                  v-hasPermi="[-->
-  <!--                    'system:user:delete',-->
-  <!--                    'system:user:update-password',-->
-  <!--                    'system:permission:assign-user-role'-->
-  <!--                  ]"-->
-  <!--                >-->
-  <!--                  <el-button type="primary" link><Icon icon="ep:d-arrow-right" /> 更多</el-button>-->
-  <!--                  <template #dropdown>-->
-  <!--                    <el-dropdown-menu>-->
-  <!--                      <el-dropdown-item-->
-  <!--                        command="handleDelete"-->
-  <!--                        v-if="checkPermi(['system:user:delete'])"-->
-  <!--                      >-->
-  <!--                        <Icon icon="ep:delete" />删除-->
-  <!--                      </el-dropdown-item>-->
-  <!--                      <el-dropdown-item-->
-  <!--                        command="handleResetPwd"-->
-  <!--                        v-if="checkPermi(['system:user:update-password'])"-->
-  <!--                      >-->
-  <!--                        <Icon icon="ep:key" />重置密码-->
-  <!--                      </el-dropdown-item>-->
-  <!--                      <el-dropdown-item-->
-  <!--                        command="handleRole"-->
-  <!--                        v-if="checkPermi(['system:permission:assign-user-role'])"-->
-  <!--                      >-->
-  <!--                        <Icon icon="ep:circle-check" />分配角色-->
-  <!--                      </el-dropdown-item>-->
-  <!--                    </el-dropdown-menu>-->
-  <!--                  </template>-->
-  <!--                </el-dropdown>-->
-  <!--              </div>-->
-  <!--            </template>-->
-  <!--          </el-table-column>-->
-          </el-table>
-  <!--        <Pagination-->
-  <!--          :total="total"-->
-  <!--          v-model:page="queryParams.pageNo"-->
-  <!--          v-model:limit="queryParams.pageSize"-->
-  <!--          @pagination="getList"-->
-  <!--        />-->
 </ContentWrap>
-<!--  &lt;!&ndash; 添加或修改用户对话框 &ndash;&gt;-->
-<!--  <UserForm ref="formRef" @success="getList" />-->
-<!--  &lt;!&ndash; 用户导入对话框 &ndash;&gt;-->
-<!--  <UserImportForm ref="importFormRef" @success="getList" />-->
-<!--  &lt;!&ndash; 分配角色 &ndash;&gt;-->
-<!--  <UserAssignRoleForm ref="assignRoleFormRef" @success="getList" />-->
+  <!-- 表单弹窗：添加/修改 -->
+  <InnerForm ref="formRef" @success="getList" />
 </template>
 <script lang="ts" setup>
-import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
-import { checkPermi } from '@/utils/permission'
-import { dateFormatter } from '@/utils/formatTime'
-import download from '@/utils/download'
-import { CommonStatusEnum } from '@/utils/constants'
-// import * as UserApi from '@/api/system/user'
-
-defineOptions({ name: 'SystemUser' })
-
-const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
-
-const loading = ref(true) // 列表的加载中
-const total = ref(0) // 列表的总页数
-const list = ref() // 列表的数
+import InnerForm from './InnerForm.vue'
+import * as OutBoundApi from '@/api/system/In/index'
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
-  number: undefined,
-  name: undefined,
-  // status: undefined,
-  // deptId: undefined,
-  // createTime: []
+  id: undefined,
+  number:undefined,
+  sampleName: undefined,
+  applyTime: undefined
 })
-const queryFormRef = ref() // 搜索的表单
-
-/** 查询列表 */
+const queryFormRef = ref()
+const loading = ref(false)
+const list = ref([])
+const total = ref()
 const getList = async () => {
   loading.value = true
   try {
-    const data = []
+    const data = await OutBoundApi.getPage(queryParams)
+    console.log(data,'1')
     list.value = data.list
-    // total.value = data.total
+    total.value = data.total
   } finally {
     loading.value = false
   }
 }
-
-/** 搜索按钮操作 */
+// 搜索处理
 const handleQuery = () => {
   queryParams.pageNo = 1
+  console.log(queryParams,'搜索时')
   getList()
 }
 
-/** 重置按钮操作 */
+// 重置查询
 const resetQuery = () => {
   queryFormRef.value?.resetFields()
   handleQuery()
 }
-
-/** 处理部门被点击 */
-const handleDeptNodeClick = async (row) => {
-  queryParams.deptId = row.id
-  await getList()
-}
-
-/** 添加/修改操作 */
+// 新建申请
 const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
-}
+const openForm = (type:string, id?:number ) =>{
+  formRef.value.open(type,id)
 
-/** 用户导入 */
-const importFormRef = ref()
-const handleImport = () => {
-  importFormRef.value.open()
 }
-
-/** 修改用户状态 */
-const handleStatusChange = async (row: UserApi.UserVO) => {
-  try {
-    // 修改状态的二次确认
-    const text = row.status === CommonStatusEnum.ENABLE ? '启用' : '停用'
-    await message.confirm('确认要"' + text + '""' + row.username + '"用户吗?')
-    // 发起修改状态
-    await UserApi.updateUserStatus(row.id, row.status)
-    // 刷新列表
-    await getList()
-  } catch {
-    // 取消后，进行恢复按钮
-    row.status =
-      row.status === CommonStatusEnum.ENABLE ? CommonStatusEnum.DISABLE : CommonStatusEnum.ENABLE
-  }
-}
-
-/** 导出按钮操作 */
-const exportLoading = ref(false)
-const handleExport = async () => {
-  try {
-    // 导出的二次确认
-    await message.exportConfirm()
-    // 发起导出
-    exportLoading.value = true
-    const data = await UserApi.exportUser(queryParams)
-    download.excel(data, '用户数据.xls')
-  } catch {
-  } finally {
-    exportLoading.value = false
-  }
-}
-
-/** 操作分发 */
-const handleCommand = (command: string, row: UserApi.UserVO) => {
-  switch (command) {
-    case 'handleDelete':
-      handleDelete(row.id)
-      break
-    case 'handleResetPwd':
-      handleResetPwd(row)
-      break
-    case 'handleRole':
-      handleRole(row)
-      break
-    default:
-      break
-  }
-}
-
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await UserApi.deleteUser(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
-}
-
-/** 重置密码 */
-const handleResetPwd = async (row: UserApi.UserVO) => {
-  try {
-    // 重置的二次确认
-    const result = await message.prompt(
-      '请输入"' + row.username + '"的新密码',
-      t('common.reminder')
-    )
-    const password = result.value
-    // 发起重置
-    await UserApi.resetUserPwd(row.id, password)
-    message.success('修改成功，新密码是：' + password)
-  } catch {}
-}
-
-/** 分配角色 */
-const assignRoleFormRef = ref()
-const handleRole = (row: UserApi.UserVO) => {
-  assignRoleFormRef.value.open(row)
-}
-
-/** 初始化 */
-// onMounted(() => {
-//   getList()
-// })
+onMounted( ()=>{
+  getList();
+})
 </script>

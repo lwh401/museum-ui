@@ -8,9 +8,9 @@
       class="-mb-15px"
       label-width="100px"
     >
-      <el-form-item label="标本编号" prop="id">
+      <el-form-item label="标本编号" prop="number">
         <el-input
-          v-model="queryParams.id"
+          v-model="queryParams.number"
           class="!w-240px"
           placeholder="请输入标本编号"
         />
@@ -61,11 +61,17 @@
 <!--  列表-->
   <ContentWrap>
       <el-table v-loading="loading" :data="list">
-<!--        <el-table-column align="center" label="标本编号" prop="id" width="100" />-->
+        <el-table-column align="center" label="申请单号" prop="id" width="100" />
         <el-table-column label="标本编号" align="center" prop="number" width="120" />
 
         <el-table-column label="申请单位" align="center" prop="applyUnit" width="120" />
-        <el-table-column label="退还时间" align="center" prop="returnExpect" width="120" />
+        <el-table-column
+          :formatter="dateFormatter2"
+          align="center"
+          label="退还时间"
+          prop="returnExpect"
+          width="180"
+        />
 
         <el-table-column label="目的" align="center" prop="purpose" width="120" />
 
@@ -81,7 +87,7 @@
 
         <el-table-column label="标本名称" align="center" prop="sampleName" width="120" />
         <el-table-column label="申请人" align="center" prop="applicant" width="120" />
-        <el-table-column label="申请数量" align="center" prop="quantity" width="100" />
+<!--        <el-table-column label="申请数量" align="center" prop="quantity" width="100" />-->
 <!--        <el-table-column label="申请时间" align="center" prop="applyTime" width="180">-->
 <!--          <template #default="scope">-->
 <!--            {{ dateFormatter(scope.row.applyTime) }}-->
@@ -93,6 +99,7 @@
 <!--          </template>-->
 <!--        </el-table-column>-->
         <el-table-column label="备注" align="center" prop="remark" />
+        <el-table-column label="状态" align="center" prop="state" />
         <el-table-column label="操作" align="center" width="220">
           <template #default="scope">
             <el-button
@@ -110,6 +117,14 @@
             >
               删除
             </el-button>
+            <el-button
+              v-hasPermi="['system:role:delete']"
+              link
+              type="danger"
+              @click="handleDelete(scope.row.id)"
+            >
+              审批
+            </el-button>
           </template>
         </el-table-column>
 
@@ -124,6 +139,8 @@
   </ContentWrap>
   <!-- 表单弹窗：添加/修改 -->
   <OutForm ref="formRef" @success="getList" />
+<!--  审批弹窗-->
+<!--  <SpForm ref="formRef" @success="getList" />-->
 </template>
 
 <script lang="ts" setup>
@@ -131,6 +148,8 @@ import OutForm from './OutForm.vue'
 
 // import ApproveForm from './approveForm.vue'
 import * as OutBoundApi from '@/api/system/Out/index'
+import {dateFormatter, dateFormatter2} from "@/utils/formatTime";
+import * as UserApi from "@/api/system/user";
 // import * as UserApi from "@/api/system/user";
 // 模拟数据
 // const mockData = [
@@ -155,29 +174,36 @@ import * as OutBoundApi from '@/api/system/Out/index'
 
 // 状态选项
 const statusOptions = [
-  { value: 1, label: '待审批' },
-  { value: 2, label: '已通过' },
-  { value: 3, label: '已拒绝' }
+  { value: 0, label: '在库（0）' },
+
+  { value: 1, label: '已出库（1）' },
+  { value: 2, label: '审批中（2）' },
+  { value: 3, label: '审批通过（3）' },
+  { value: 4, label: '审批驳回（4）' }
 ]
 
 // 状态标签类型映射
-const statusTagMap = {
-  1: 'warning',
-  2: 'success',
-  3: 'danger'
-}
-const queryFormRef = ref()
+// const statusTagMap = {
+//   1: 'warning',
+//   2: 'success',
+//   3: 'danger'
+// }
+
+
+// 0在库，1已出库,2审批中，3审批通过，4审批驳回
+
 
 // 查询参数
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   id: undefined,
+  number:undefined,
   sampleName: undefined,
   status: undefined,
   applyTime: undefined
 })
-
+const queryFormRef = ref()
 const loading = ref(false)
 // const total = ref(mockData.length)
 
@@ -194,6 +220,7 @@ const getList = async () => {
     loading.value = false
   }
 }
+
 
 
 // 搜索处理
@@ -231,19 +258,31 @@ const openForm = (type:string, id?:number ) =>{
 //     ElMessage.success('审批操作成功')
 //   })
 // }
+// const handleCommand = (command: string, row: UserApi.UserVO) => {
+//   switch (command) {
+//     case 'handleDelete':
+//       handleDelete(row.id)
+//       break
+
+
+
+
+
+
+
 
 // 删除操作
-// const handleDelete = (row: any) => {
-//   ElMessageBox.confirm(`确认删除申请 ${row.applyNo}?`, '警告', {
-//     confirmButtonText: '确认',
-//     cancelButtonText: '取消',
-//     type: 'error'
-//   }).then(() => {
-//     ElMessage.success('删除成功')
-//   })
-// }
-// const showApproveForm = ref(false)
-// const showOutForm = ref(false)
+const handleDelete = async (id: number) => {
+  try {
+    // 删除的二次确认
+    await message.delConfirm()
+    // 发起删除
+    await DeleteApi.deleteOut(id)
+    message.success(t('common.delSuccess'))
+    // 刷新列表
+    await getList()
+  } catch {}
+}
 
 onMounted( ()=>{
   getList();

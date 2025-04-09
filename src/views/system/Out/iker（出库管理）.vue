@@ -6,9 +6,9 @@
       :inline="true"
       :model="queryParams"
       class="-mb-15px"
-      label-width="68px"
+      label-width="100px"
     >
-      <el-form-item label="名称" prop="name">
+      <el-form-item label="标本编号" prop="">
         <el-input
           v-model="queryParams.name"
           class="!w-240px"
@@ -37,6 +37,22 @@
           value-format="YYYY-MM-DD HH:mm:ss"
         />
       </el-form-item>
+      <el-form-item label="申请状态" prop="status">
+        <el-select v-model="queryParams.status" class="!w-240px" clearable>
+          <el-option
+            v-for="item in statusOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+
+
+
+
+
+
       <el-form-item>
         <el-button @click="handleQuery">
           <Icon class="mr-5px" icon="ep:search" />
@@ -57,7 +73,7 @@
         </el-button>
       </el-form-item>
     </el-form>
-
+  </ContentWrap>
     <!-- 表格 -->
     <el-table v-loading="loading" :data="list">
       <el-table-column align="center" label="编号" prop="number" />
@@ -88,49 +104,49 @@
       </el-table-column>
     </el-table>
     <!-- 新增对话框 -->
-    <el-dialog
-      v-model="formVisible"
-      :title="formType === 'create' ? '新增' : '修改'"
-      width="500px"
-    >
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="80px"
-      >
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入名称" />
-        </el-form-item>
-        <el-form-item label="用途" prop="use">
-          <el-input v-model="formData.use" placeholder="请输入用途" />
-        </el-form-item>
-        <el-form-item label="显示顺序" prop="sort">
-          <el-input-number v-model="formData.sort" :min="0" />
-        </el-form-item>
-        <el-form-item label="时间范围">
-          <el-date-picker
-            v-model="formData.timeRange"
-            type="daterange"
-            range-separator="-"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD HH:mm:ss"
-          />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="formData.remark" type="textarea" />
-        </el-form-item>
-      </el-form>
+<!--    <el-dialog-->
+<!--      v-model="formVisible"-->
+<!--      :title="formType === 'create' ? '新增' : '修改'"-->
+<!--      width="500px"-->
+<!--    >-->
+<!--      <el-form-->
+<!--        ref="formRef"-->
+<!--        :model="formData"-->
+<!--        :rules="formRules"-->
+<!--        label-width="80px"-->
+<!--      >-->
+<!--        <el-form-item label="名称" prop="name">-->
+<!--          <el-input v-model="formData.name" placeholder="请输入名称" />-->
+<!--        </el-form-item>-->
+<!--        <el-form-item label="用途" prop="use">-->
+<!--          <el-input v-model="formData.use" placeholder="请输入用途" />-->
+<!--        </el-form-item>-->
+<!--        <el-form-item label="显示顺序" prop="sort">-->
+<!--          <el-input-number v-model="formData.sort" :min="0" />-->
+<!--        </el-form-item>-->
+<!--        <el-form-item label="时间范围">-->
+<!--          <el-date-picker-->
+<!--            v-model="formData.timeRange"-->
+<!--            type="daterange"-->
+<!--            range-separator="-"-->
+<!--            start-placeholder="开始日期"-->
+<!--            end-placeholder="结束日期"-->
+<!--            value-format="YYYY-MM-DD HH:mm:ss"-->
+<!--          />-->
+<!--        </el-form-item>-->
+<!--        <el-form-item label="备注" prop="remark">-->
+<!--          <el-input v-model="formData.remark" type="textarea" />-->
+<!--        </el-form-item>-->
+<!--      </el-form>-->
 
-      <template #footer>
-        <el-button @click="formVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">提交</el-button>
-      </template>
-    </el-dialog>
-  </contentWrap>
+<!--      <template #footer>-->
+<!--        <el-button @click="formVisible = false">取消</el-button>-->
+<!--        <el-button type="primary" @click="submitForm">提交</el-button>-->
+<!--      </template>-->
+<!--    </el-dialog>-->
+<!--  </contentWrap>-->
   <!-- 表单弹窗：添加/修改 -->
-  <RoleForm ref="formRef" @success="getList" />
+<!--  <IkerForm ref="formRef" @success="getList" />-->
 </template>
 
 <script lang="ts" setup>
@@ -138,10 +154,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { dateFormatter } from '@/utils/formatTime'
-import RoleForm from "@/views/system/role/RoleForm.vue";
-import * as UserApi from '@/api/system/user'
+// import IkerForm from "@/views/system/Out/IkerForm.vue";
+// import * as UserApi from '@/api/system/user'
 
-import * as OutBoundApi from '@/api/system/Out'
+// import * as OutBoundApi from '@/api/system/ex/index'
 
 const { t } = useI18n()
 
@@ -157,22 +173,22 @@ const queryParams = reactive({
 const queryFormRef = ref()
 
 /** 查询列表 */
-const getList = async () => {
-  loading.value = true
-  try {
-    // const data = await UserApi.getUserPage(queryParams)
-    const data = [];
-    list.value = data.list
-  } finally {
-    loading.value = false
-  }
-}
+// const getList = async () => {
+//   loading.value = true
+//   try {
+//     // const data = await UserApi.getUserPage(queryParams)
+//     const data = [];
+//     list.value = data.list
+//   } finally {
+//     loading.value = false
+//   }
+// }
 
 /** 搜索按钮操作 */
-const handleQuery = () => {
-  queryParams.pageNo = 1
-  getList()
-}
+// const handleQuery = () => {
+//   queryParams.pageNo = 1
+//   getList()
+// }
 
 /** 删除按钮操作 */
 const handleDelete = async (id: number) => {
@@ -193,6 +209,15 @@ const openForm = (type: string, id?: number) => {
   // 这里需要实现表单组件逻辑
   console.log('打开表单', type, id)
 }
+
+
+
+// 状态选项
+// const statusOptions = [
+//   { value: 1, label: '待审批' },
+//   { value: 2, label: '已通过' },
+//   { value: 3, label: '已拒绝' }
+// ]
 // // 新增以下类型定义
 // interface FormData {
 //   id?: number

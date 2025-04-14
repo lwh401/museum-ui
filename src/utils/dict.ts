@@ -240,4 +240,6 @@ export enum DICT_TYPE {
   IOT_DATA_TYPE = 'iot_data_type', // IOT 数据类型
   IOT_UNIT_TYPE = 'iot_unit_type', // IOT 单位类型
   IOT_RW_TYPE = 'iot_rw_type' // IOT 读写类型
+
+
 }
